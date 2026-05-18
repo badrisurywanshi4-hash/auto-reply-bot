@@ -11,24 +11,25 @@ client = genai.Client(api_key=GEMINI_API_KEY)
 
 async def reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        user_message = update.message.text
+        user_text = update.message.text
 
         response = client.models.generate_content(
             model="gemini-1.5-flash",
-            contents=user_message
+            contents=user_text
         )
 
         await update.message.reply_text(response.text)
 
     except Exception as e:
-        await update.message.reply_text("Error: AI not working")
+        print(e)
+        await update.message.reply_text("AI error, check API key")
 
 async def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, reply))
+    app.add_handler(MessageHandler(filters.TEXT, reply))
 
-    print("Bot is running...")
+    print("Bot running...")
 
     await app.initialize()
     await app.start()
