@@ -1,8 +1,11 @@
+
+import os
 import random
 from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
-BOT_TOKEN = "YOUR_BOT_TOKEN"
+# 🔑 TOKEN (Render env se aayega)
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 # ❤️ LOVE
 love = [
@@ -11,11 +14,11 @@ love = [
 "इश्क़ वो नहीं जो लफ़्ज़ों में बयान हो,\nइश्क़ वो है जो खामोशी में भी मेहरबान हो।",
 "तेरे बिना ये दिल अधूरा सा लगता है,\nहर खुशी में भी एक दर्द सा लगता है।",
 "तू सामने हो तो वक्त ठहर सा जाता है,\nतेरी आँखों में मेरा जहां बस जाता है।",
-"तेरी यादों का सहारा ही काफी है,\nवरना ये दिल तो कब का टूट जाता है।",
 "मोहब्बत नाम है तेरा हर एक सांस में,\nतू ही बसा है मेरे हर एहसास में।",
 "तेरे बिना जीना अब मुमकिन नहीं लगता,\nतू ही मेरा सच, बाकी सब सपना लगता है।",
 "तू मिले या ना मिले ये मुकद्दर की बात है,\nपर तुझे चाहना मेरी फितरत की बात है।",
-"दिल चाहता है तुझे हर पल पास रखूं,\nतेरी हर खुशी को अपनी सांस रखूं।"
+"दिल चाहता है तुझे हर पल पास रखूं,\nतेरी हर खुशी को अपनी सांस रखूं।",
+"तेरी यादें ही अब मेरा सहारा हैं,\nतू नहीं फिर भी तू हमारा है।"
 ]
 
 # 💔 SAD
@@ -65,6 +68,7 @@ user_state = {}
 def get_shayari(topic):
     return random.choice(topic)
 
+# 🎯 START BUTTONS
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         ["❤️ Love", "💔 Sad"],
@@ -72,17 +76,24 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
-    await update.message.reply_text("Aapka mood select karo 👇", reply_markup=reply_markup)
+    await update.message.reply_text(
+        "Aapka mood select karo 👇",
+        reply_markup=reply_markup
+    )
 
+# 💬 MESSAGE HANDLER
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.lower()
     user_id = update.message.chat_id
 
-    if text in ["❤️ love", "💔 sad", "🤝 friendship", "🔥 motivation"]:
-        user_state[user_id] = text.split()[1]
-
-    elif text in ["next", "aur", "dobara", "another", "nhi pasand"]:
-        pass
+    if text == "❤️ love":
+        user_state[user_id] = "love"
+    elif text == "💔 sad":
+        user_state[user_id] = "sad"
+    elif text == "🤝 friendship":
+        user_state[user_id] = "friendship"
+    elif text == "🔥 motivation":
+        user_state[user_id] = "motivation"
 
     topic = user_state.get(user_id, "love")
 
@@ -97,6 +108,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(msg)
 
+# 🚀 APP START
 app = ApplicationBuilder().token(BOT_TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
