@@ -1,41 +1,25 @@
 import os
-import asyncio
 from telegram import Update
-from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
-from google import genai
+from telegram.ext import Application, MessageHandler, filters, ContextTypes, ChatMemberHandler
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-client = genai.Client(api_key=GEMINI_API_KEY)
+# 👋 emoji reply
+async def auto_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("😊👍")
 
-async def reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        user_text = update.message.text
-
-        response = client.models.generate_content(
-            model="gemini-1.5-flash",
-            contents=user_text
+# 👋 welcome message
+async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    for member in update.chat_member.new_chat_members:
+        await context.bot.send_message(
+            chat_id=update.chat_member.chat.id,
+            text=f"👋 Welcome {member.first_name}!"
         )
 
-        await update.message.reply_text(response.text)
+app = Application.builder().token(BOT_TOKEN).build()
 
-    except Exception as e:
-        print(e)
-        await update.message.reply_text("AI error, check API key")
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, auto_reply))
+app.add_handler(ChatMemberHandler(welcome, ChatMemberHandler.CHAT_MEMBER))
 
-async def main():
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
-
-    app.add_handler(MessageHandler(filters.TEXT, reply))
-
-    print("Bot running...")
-
-    await app.initialize()
-    await app.start()
-    await app.updater.start_polling()
-
-    while True:
-        await asyncio.sleep(3600)
-
-asyncio.run(main())
+print("Bot is running...")
+app.run_polling()
